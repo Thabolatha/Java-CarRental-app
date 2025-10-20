@@ -1,0 +1,204 @@
+import java.util.*;
+
+public class CarRentalSystem {
+
+    static ArrayList<Vehicle> carList = new ArrayList<>();
+    static ArrayList<Rental> rentalList = new ArrayList<>();
+    static Scanner input = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        boolean running = true;
+
+        System.out.println("====================================");
+        System.out.println("   Welcome to BlueChip Car Rentals  ");
+        System.out.println("====================================");
+        System.out.println("This program helps manage vehicles and rentals.\n");
+
+        while (running) {
+            System.out.println("\n------ MAIN MENU ------");
+            System.out.println("1. Add a Vehicle");
+            System.out.println("2. View Available Vehicles");
+            System.out.println("3. Rent a Vehicle");
+            System.out.println("4. Return a Vehicle");
+            System.out.println("5. Generate Report");
+            System.out.println("6. Exit");
+            System.out.print("Enter your choice: ");
+
+            int choice;
+            try {
+                choice = input.nextInt();
+                input.nextLine();
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                input.nextLine();
+                continue;
+            }
+
+            switch (choice) {
+                case 1:
+                    addVehicle();
+                    break;
+                case 2:
+                    showAvailableCars();
+                    break;
+                case 3:
+                    rentVehicle();
+                    break;
+                case 4:
+                    returnVehicle();
+                    break;
+                case 5:
+                    generateReport();
+                    break;
+                case 6:
+                    System.out.println("System closing... Goodbye!");
+                    running = false;
+                    break;
+                default:
+                    System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+
+    // Add vehicle details
+    static void addVehicle() {
+        System.out.print("Enter vehicle type (Car/Truck/Van): ");
+        String type = input.nextLine();
+
+        System.out.print("Enter model name: ");
+        String model = input.nextLine();
+
+        System.out.print("Enter color: ");
+        String color = input.nextLine();
+
+        System.out.print("Enter price per day (R): ");
+        double price = input.nextDouble();
+        input.nextLine();
+
+        carList.add(new Vehicle(type, model, color, price, true));
+        System.out.println("Vehicle added successfully.");
+    }
+
+    // Display vehicles that are available
+    static void showAvailableCars() {
+        System.out.println("\nAvailable Vehicles:");
+        boolean found = false;
+        for (Vehicle v : carList) {
+            if (v.available) {
+                System.out.println(v);
+                found = true;
+            }
+        }
+        if (!found) {
+            System.out.println("No vehicles available right now.");
+        }
+    }
+
+    // Renting process
+    static void rentVehicle() {
+        System.out.print("Enter your name: ");
+        String name = input.nextLine();
+
+        System.out.print("Enter model to rent: ");
+        String model = input.nextLine();
+
+        for (Vehicle v : carList) {
+            if (v.model.equalsIgnoreCase(model) && v.available) {
+                System.out.print("How many days would you like to rent it for? ");
+                int days = input.nextInt();
+                input.nextLine();
+
+                double totalCost = v.pricePerDay * days;
+                v.available = false;
+
+                rentalList.add(new Rental(name, v, days, totalCost));
+
+                System.out.println("\nRental completed!");
+                System.out.println("Customer: " + name);
+                System.out.println("Vehicle: " + v.model);
+                System.out.println("Total cost: R" + totalCost);
+                return;
+            }
+        }
+        System.out.println("Vehicle not available or not found.");
+    }
+
+    // Return vehicle and update status
+    static void returnVehicle() {
+        System.out.print("Enter model to return: ");
+        String model = input.nextLine();
+
+        for (Rental r : rentalList) {
+            if (r.vehicle.model.equalsIgnoreCase(model) && !r.vehicle.available) {
+                r.vehicle.available = true;
+                System.out.println("Vehicle successfully returned by " + r.customer + ".");
+                return;
+            }
+        }
+        System.out.println("No record found for that rental.");
+    }
+
+    // Generate simple rental report
+    static void generateReport() {
+        System.out.println("\n====== RENTAL REPORT ======");
+        double totalRevenue = 0;
+        int activeRentals = 0;
+
+        for (Rental r : rentalList) {
+            System.out.println(r);
+            totalRevenue += r.cost;
+            activeRentals++;
+        }
+
+        int availableCount = 0;
+        for (Vehicle v : carList) {
+            if (v.available) availableCount++;
+        }
+
+        System.out.println("\nActive Rentals: " + activeRentals);
+        System.out.println("Available Vehicles: " + availableCount);
+        System.out.println("Total Revenue: R" + totalRevenue);
+        System.out.println("===========================\n");
+    }
+}
+
+// Vehicle class
+class Vehicle {
+    String type;
+    String model;
+    String color;
+    double pricePerDay;
+    boolean available;
+
+    Vehicle(String type, String model, String color, double pricePerDay, boolean available) {
+        this.type = type;
+        this.model = model;
+        this.color = color;
+        this.pricePerDay = pricePerDay;
+        this.available = available;
+    }
+
+    public String toString() {
+        return type + " - " + model + " (" + color + "), R" + pricePerDay + "/day [" +
+                (available ? "Available" : "Rented") + "]";
+    }
+}
+
+// Rental class
+class Rental {
+    String customer;
+    Vehicle vehicle;
+    int days;
+    double cost;
+
+    Rental(String customer, Vehicle vehicle, int days, double cost) {
+        this.customer = customer;
+        this.vehicle = vehicle;
+        this.days = days;
+        this.cost = cost;
+    }
+
+    public String toString() {
+        return "Customer: " + customer + " | Vehicle: " + vehicle.model + " | " + days + " days | R" + cost;
+    }
+}
